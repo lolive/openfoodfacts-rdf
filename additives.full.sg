@@ -1,0 +1,154 @@
+BASE <http://world-fr.openfoodfacts.org/> 
+PREFIX iter: <http://w3id.org/sparql-generate/iter/> 
+PREFIX fun: <http://w3id.org/sparql-generate/fn/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/> 
+PREFIX food: <http://world-fr.openfoodfacts.org/> 
+GENERATE { 
+?additive a food:Additive ;
+          food:colour_index ?colour_index;
+	  food:default_additive_class ?default_additive_class;
+          food:efsa ?efsa;
+          food:efsa_evaluation_adi ?efsa_evaluation_adi;
+          food:efsa_evaluation_adi_established ?efsa_evaluation_adi_established;
+          food:efsa_evaluation_date ?efsa_evaluation_date;
+          food:efsa_evaluation ?efsa_evaluation;
+	  food:efsa_evaluation_overexposure_risk ?efsa_evaluation_overexposure_risk;
+	  food:efsa_evaluation_safety_assessed ?efsa_evaluation_safety_assessed;
+	  food:efsa_evaluation_url ?efsa_evaluation_url;
+	  food:e_number ?e_number;
+          owl:sameAs ?wikidata_url;
+.
+GENERATE { ?additive a ?additive_class . } 
+ITERATOR iter:Split(?en_additive_classes, ", ") AS ?en_additive_class 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/additives/class/",?en_additive_class)) as ?additive_class) 
+} .
+GENERATE { ?additive  
+	  food:mandatory_additive_class ?mandatory_additive_class
+. }
+ITERATOR iter:Split(?mandatory_additive_classes, ", ") AS ?mandatory_additive_class_name 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/additives/class/",?mandatory_additive_class_name)) as ?mandatory_additive_class) 
+} .
+
+
+GENERATE { ?additive 
+food:efsa_evaluation_exposure_95th_greater_than_adi ?efsa_evaluation_exposure_95th_greater_than_adi . } 
+ITERATOR iter:Split(?ens_efsa_evaluation_exposure_95th_greater_than_adi, ", ") AS ?en_efsa_evaluation_exposure_95th_greater_than_adi 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/peopleCategory/",?en_efsa_evaluation_exposure_95th_greater_than_adi)) as ?efsa_evaluation_exposure_95th_greater_than_adi) 
+} .
+GENERATE { ?additive 
+food:efsa_evaluation_exposure_95th_greater_than_noael ?efsa_evaluation_exposure_95th_greater_than_noael . } 
+ITERATOR iter:Split(?ens_efsa_evaluation_exposure_95th_greater_than_noael, ", ") AS ?en_efsa_evaluation_exposure_95th_greater_than_noael 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/peopleCategory/",?en_efsa_evaluation_exposure_95th_greater_than_noael)) as ?efsa_evaluation_exposure_95th_greater_than_noael) 
+} .
+GENERATE { ?additive 
+food:efsa_evaluation_exposure_mean_greater_than_adi ?efsa_evaluation_exposure_mean_greater_than_adi . } 
+ITERATOR iter:Split(?ens_efsa_evaluation_exposure_mean_greater_than_adi, ", ") AS ?en_efsa_evaluation_exposure_mean_greater_than_adi 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/peopleCategory/",?en_efsa_evaluation_exposure_mean_greater_than_adi)) as ?efsa_evaluation_exposure_mean_greater_than_adi) 
+} .
+GENERATE { ?additive 
+food:efsa_evaluation_exposure_mean_greater_than_noael ?efsa_evaluation_exposure_mean_greater_than_noael . } 
+ITERATOR iter:Split(?ens_efsa_evaluation_exposure_mean_greater_than_noael, ", ") AS ?en_efsa_evaluation_exposure_mean_greater_than_noael 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/peopleCategory/",?en_efsa_evaluation_exposure_mean_greater_than_noael,"en:","")) as ?efsa_evaluation_exposure_mean_greater_than_noael) 
+} .
+
+GENERATE { ?additive 
+rdfs:label ?name_lang . }
+ITERATOR iter:JSONListKeys(?names) AS ?lang
+WHERE {
+BIND (fun:JSONPath(?names, CONCAT("$.",?lang)) AS ?name) 
+BIND (STRLANG(?name,?lang) AS ?name_lang)
+} .
+
+GENERATE { 
+?additive food:parent ?parent
+} 
+ITERATOR iter:JSONPath(?en_parents,"$[*]") AS ?en_parent
+WHERE {
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/additives/",REPLACE(STR(?en_parent),'"',""))) as ?parent) 
+}.
+
+GENERATE { 
+?additive food:child ?child
+} 
+ITERATOR iter:JSONPath(?en_children,"$[*]") AS ?en_child
+WHERE {
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/additives/",REPLACE(STR(?en_child),'"',""))) as ?child) 
+}.
+
+GENERATE { ?additive 
+food:wikipedia_title ?wikipedia_title_lang . }
+ITERATOR iter:JSONListKeys(?wikipedia_titles) AS ?lang_wikipedia_title
+WHERE {
+BIND (fun:JSONPath(?wikipedia_titles, CONCAT("$.",?lang_wikipedia_title)) AS ?wikipedia_title) 
+BIND (STRLANG(?wikipedia_title,?lang_wikipedia_title) AS ?wikipedia_title_lang)
+} .
+
+GENERATE { ?additive 
+food:wikipedia_abstract ?wikipedia_abstract_lang . }
+ITERATOR iter:JSONListKeys(?wikipedia_abstracts) AS ?lang_wikipedia_abstract
+WHERE {
+BIND (fun:JSONPath(?wikipedia_abstracts, CONCAT("$.",?lang_wikipedia_abstract)) AS ?wikipedia_abstract) 
+BIND (STRLANG(?wikipedia_abstract,?lang_wikipedia_abstract) AS ?wikipedia_abstract_lang)
+} .
+
+GENERATE { ?additive 
+food:wikipedia_url ?wikipedia_url_lang . }
+ITERATOR iter:JSONListKeys(?wikipedia_urls) AS ?lang_wikipedia_url
+WHERE {
+BIND (fun:JSONPath(?wikipedia_urls, CONCAT("$.",?lang_wikipedia_url)) AS ?wikipedia_url) 
+BIND (STRLANG(?wikipedia_url,?lang_wikipedia_url) AS ?wikipedia_url_lang)
+} .
+
+
+} 
+SOURCE <https://static.openfoodfacts.org/data/taxonomies/additives.full.json> AS ?source 
+ITERATOR iter:JSONListKeys(?source) AS ?en_additive_key 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/additives/",?en_additive_key)) as ?additive) 
+BIND (fun:JSONPath(?source,CONCAT("$.",?en_additive_key)) AS ?en_additive) 
+
+BIND (fun:JSONPath(?en_additive,"$.additives_classes.en") AS ?en_additive_classes) 
+BIND (fun:JSONPath(?en_additive,"$.colour_index.en") AS ?colour_index) 
+BIND (fun:JSONPath(?en_additive,"$.default_additive_class.en") AS ?en_default_additive_class) 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/additives/",?en_default_additive_class)) as ?default_additive_class) 
+BIND (IRI(fun:JSONPath(?en_additive,"$.efsa.en")) AS ?efsa) 
+
+
+BIND (fun:JSONPath(?en_additive,"$.efsa_evaluation_adi.en") AS ?efsa_evaluation_adi)
+BIND (fun:JSONPath(?en_additive,"$.efsa_evaluation_adi_established.en") AS ?efsa_evaluation_adi_established)
+BIND (fun:JSONPath(?en_additive,"$.efsa_evaluation_date.en") AS ?efsa_evaluation_date)
+BIND (REPLACE(fun:JSONPath(?en_additive,"$.efsa_evaluation.en"),"en:","") AS ?efsa_evaluation)
+BIND (fun:JSONPath(?en_additive,"$.efsa_evaluation_exposure_95th_greater_than_adi.en") AS ?ens_efsa_evaluation_exposure_95th_greater_than_adi)
+BIND (fun:JSONPath(?en_additive,"$.efsa_evaluation_exposure_95th_greater_than_noael.en") AS ?ens_efsa_evaluation_exposure_95th_greater_than_noael)
+BIND (fun:JSONPath(?en_additive,"$.efsa_evaluation_exposure_mean_greater_than_adi.en") AS ?ens_efsa_evaluation_exposure_mean_greater_than_adi)
+BIND (fun:JSONPath(?en_additive,"$.efsa_evaluation_exposure_mean_greater_than_noael.en") AS ?ens_efsa_evaluation_exposure_mean_greater_than_noael)
+
+
+BIND (REPLACE(fun:JSONPath(?en_additive,"$.efsa_evaluation_overexposure_risk.en"),"en:","") AS ?efsa_evaluation_overexposure_risk)
+BIND (REPLACE(fun:JSONPath(?en_additive,"$.efsa_evaluation_safety_assessed.en"),"en:","") AS ?efsa_evaluation_safety_assessed)
+BIND (IRI(fun:JSONPath(?en_additive,"$.efsa_evaluation_url.en")) AS ?efsa_evaluation_url) 
+BIND (fun:JSONPath(?en_additive,"$.e_number.en") AS ?e_number) 
+BIND (fun:JSONPath(?en_additive,"$.mandatory_additive_class.en") AS ?mandatory_additive_classes)
+
+BIND (fun:JSONPath(?en_additive,"$.name") AS ?names) 
+
+BIND (fun:JSONPath(?en_additive,"$.children") AS ?en_children) 
+BIND (fun:JSONPath(?en_additive,"$.parents") AS ?en_parents) 
+
+
+BIND (IRI(CONCAT("http://www.wikidata.org/entity/",fun:JSONPath(?en_additive,"$.wikidata.en"))) as ?wikidata_url) 
+
+BIND (fun:JSONPath(?en_additive,"$.wikipedia_abstract") AS ?wikipedia_abstracts) 
+BIND (fun:JSONPath(?en_additive,"$.wikipedia_title") AS ?wikipedia_titles) 
+BIND (fun:JSONPath(?en_additive,"$.wikipedia_url") AS ?wikipedia_urls) 
+
+}

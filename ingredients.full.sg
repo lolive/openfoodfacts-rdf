@@ -1,0 +1,77 @@
+BASE <http://world-fr.openfoodfacts.org/> 
+PREFIX iter: <http://w3id.org/sparql-generate/iter/> 
+PREFIX fun: <http://w3id.org/sparql-generate/fn/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/> 
+PREFIX food: <http://world-fr.openfoodfacts.org/> 
+GENERATE { 
+
+?ingredient a food:Ingredient ;
+          owl:sameAs ?wikidata_en;
+          owl:sameAs ?wikidta_en;
+          food:wikipedia ?wikipedia_url;
+          food:wikipedia ?wkipedia_url;
+	  food:nova ?nova;
+	food:scoville ?scoville;
+	food:treatment ?treatment;
+.
+
+GENERATE { ?ingredient 
+food:allergen ?allergen_lang . }
+ITERATOR iter:JSONListKeys(?allergens) AS ?lang
+WHERE {
+BIND (fun:JSONPath(?allergens, CONCAT("$.",?lang)) AS ?allergen) 
+BIND (STRLANG(?allergen,?lang) AS ?allergen_lang)
+} .
+
+
+GENERATE { ?ingredient 
+rdfs:label ?name_lang . }
+ITERATOR iter:JSONListKeys(?names) AS ?lang
+WHERE {
+BIND (fun:JSONPath(?names, CONCAT("$.",?lang)) AS ?name) 
+BIND (STRLANG(?name,?lang) AS ?name_lang)
+} .
+
+
+GENERATE { 
+?ingredient food:parent ?parent
+} 
+ITERATOR iter:JSONPath(?en_parents,"$[*]") AS ?en_parent
+WHERE {
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/ingredients/",REPLACE(STR(?en_parent),'"',""))) as ?parent) 
+}.
+
+GENERATE { 
+?ingredient food:child ?child
+} 
+ITERATOR iter:JSONPath(?en_children,"$[*]") AS ?en_child
+WHERE {
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/ingredients/",REPLACE(STR(?en_child),'"',""))) as ?child) 
+}.
+
+
+}
+SOURCE <https://static.openfoodfacts.org/data/taxonomies/ingredients.full.json> AS ?source 
+ITERATOR iter:JSONListKeys(?source) AS ?en_ingredient_key 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/ingredients/",REPLACE(?en_ingredient_key,"en:",""))) as ?ingredient) 
+BIND (fun:JSONPath(?source,CONCAT("$.",?en_ingredient_key)) AS ?en_ingredient) 
+
+BIND (fun:JSONPath(?en_ingredient,"$.allergens") AS ?allergens) 
+BIND (fun:JSONPath(?en_ingredient,"$.parents") AS ?en_parents) 
+BIND (fun:JSONPath(?en_ingredient,"$.children") AS ?en_children) 
+
+BIND (fun:JSONPath(?en_ingredient,"$.name") AS ?names) 
+
+BIND (fun:JSONPath(?en_ingredient,"$.nova.en") AS ?nova) 
+BIND (fun:JSONPath(?en_ingredient,"$.scoville.en") AS ?scoville) 
+BIND (fun:JSONPath(?en_ingredient,"$.treatment.en") AS ?treatlent) 
+
+BIND (IRI(CONCAT("http://www.wikidata.org/entity/",fun:JSONPath(?en_ingredient,"$.wikidata.en"))) as ?wikidata_en) 
+BIND (IRI(CONCAT("http://www.wikidata.org/entity/",fun:JSONPath(?en_ingredient,"$.wikidta.en"))) as ?wikidta_en) 
+BIND (IRI(fun:JSONPath(?en_ingredient,"$.wikipedia.en")) as ?wikipedia_url) 
+BIND (IRI(fun:JSONPath(?en_ingredient,"$.wkipedia.en")) as ?wkipedia_url) 
+}

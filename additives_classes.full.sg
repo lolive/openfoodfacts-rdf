@@ -1,0 +1,43 @@
+BASE <http://world-fr.openfoodfacts.org/> 
+PREFIX iter: <http://w3id.org/sparql-generate/iter/> 
+PREFIX fun: <http://w3id.org/sparql-generate/fn/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/> 
+PREFIX food: <http://world-fr.openfoodfacts.org/> 
+GENERATE { 
+?additive_class a food:Additive_Class ;
+                    owl:sameAs ?wikidata_url; 
+.
+
+GENERATE { ?additive_class 
+rdfs:label ?name_lang . }
+ITERATOR iter:JSONListKeys(?names) AS ?lang
+WHERE {
+BIND (fun:JSONPath(?names, CONCAT("$.",?lang)) AS ?name) 
+BIND (STRLANG(?name,?lang) AS ?name_lang)
+} .
+
+GENERATE { ?additive_class 
+rdfs:comment ?description_lang . }
+ITERATOR iter:JSONListKeys(?descriptions) AS ?lang
+WHERE {
+BIND (fun:JSONPath(?descriptions, CONCAT("$.",?lang)) AS ?description) 
+BIND (STRLANG(?description,?lang) AS ?description_lang)
+} .
+
+
+
+}
+
+SOURCE <https://static.openfoodfacts.org/data/taxonomies/additives_classes.full.json> AS ?source 
+ITERATOR iter:JSONListKeys(?source) AS ?en_additive_class_key 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/additives/class/",?en_additive_class_key)) as ?additive_class) 
+BIND (fun:JSONPath(?source,CONCAT("$.",?en_additive_class_key)) AS ?en_additive_class) 
+
+BIND (fun:JSONPath(?en_additive_class,"$.description") AS ?descriptions) 
+BIND (fun:JSONPath(?en_additive_class,"$.name") AS ?names) 
+BIND (IRI(CONCAT("http://www.wikidata.org/entity/",fun:JSONPath(?en_additive_class,"$.wikidata.en"))) as ?wikidata_url) 
+}

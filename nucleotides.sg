@@ -1,0 +1,35 @@
+BASE <http://world-fr.openfoodfacts.org/> 
+PREFIX iter: <http://w3id.org/sparql-generate/iter/> 
+PREFIX fun: <http://w3id.org/sparql-generate/fn/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/> 
+PREFIX food: <http://world-fr.openfoodfacts.org/> 
+PREFIX food_labels: <http://world-fr.openfoodfacts.org/labels/> 
+
+
+GENERATE { 
+
+?nucleotide a food:Nucleotide ;
+.
+
+GENERATE { ?nucleotide 
+rdfs:label ?name_lang . }
+ITERATOR iter:JSONListKeys(?names) AS ?lang
+WHERE {
+BIND (fun:JSONPath(?names, CONCAT("$.",?lang)) AS ?name) 
+BIND (STRLANG(?name,?lang) AS ?name_lang)
+} .
+
+
+}
+SOURCE <https://static.openfoodfacts.org/data/taxonomies/nucleotides.json> AS ?source 
+ITERATOR iter:JSONListKeys(?source) AS ?en_nucleotide_key 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/nucleotides/",?en_nucleotide_key)) as ?nucleotide) 
+BIND (fun:JSONPath(?source,CONCAT("$.",?en_nucleotide_key)) AS ?en_nucleotide) 
+
+BIND (fun:JSONPath(?en_nucleotide,"$.name") AS ?names) 
+
+}

@@ -1,0 +1,78 @@
+BASE <http://world-fr.openfoodfacts.org/> 
+PREFIX iter: <http://w3id.org/sparql-generate/iter/> 
+PREFIX fun: <http://w3id.org/sparql-generate/fn/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/> 
+PREFIX food: <http://world-fr.openfoodfacts.org/> 
+GENERATE { 
+
+?category a food:Category ;
+          food:country ?country;
+          food:grapeVariety ?grape_variety;
+          food:regionalProtection ?regional_protection;
+          food:region ?region;
+          food:pnns_group_1 ?pnns_group_1;
+          food:pnns_group_2 ?pnns_group_2;
+          food:wikidata_category ?wikidata_category;
+          food:wikidata_category ?wikipedia_category;
+.
+
+GENERATE { ?category 
+owl:sameAs ?wikidata_url . }
+ITERATOR iter:JSONListKeys(?wikidata) AS ?lang_wikidata
+WHERE {
+BIND (fun:JSONPath(?wikidata, CONCAT("$.",?lang_wikidata)) AS ?wikidata_id) 
+BIND (IRI(CONCAT("http://www.wikidata.org/entity/",?wikidata_id)) AS ?wikidata_url) 
+} .
+
+
+
+GENERATE { ?category 
+rdfs:label ?name_lang . }
+ITERATOR iter:JSONListKeys(?names) AS ?lang
+WHERE {
+BIND (fun:JSONPath(?names, CONCAT("$.",?lang)) AS ?name) 
+BIND (STRLANG(?name,?lang) AS ?name_lang)
+} .
+
+
+GENERATE { 
+?category food:parent ?parent
+} 
+ITERATOR iter:JSONPath(?en_parents,"$[*]") AS ?en_parent
+WHERE {
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/categories/",REPLACE(STR(?en_parent),'"',""))) as ?parent) 
+}.
+
+GENERATE { 
+?category food:child ?child
+} 
+ITERATOR iter:JSONPath(?en_children,"$[*]") AS ?en_child
+WHERE {
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/categories/",REPLACE(STR(?en_child),'"',""))) as ?child) 
+}.
+
+
+}
+SOURCE <https://static.openfoodfacts.org/data/taxonomies/categories.full.json> AS ?source 
+ITERATOR iter:JSONListKeys(?source) AS ?en_category_key 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/categories/",?en_category_key)) as ?category) 
+BIND (fun:JSONPath(?source,CONCAT("$.",?en_category_key)) AS ?en_category) 
+
+BIND (fun:JSONPath(?en_category,"$.parents") AS ?en_parents) 
+BIND (fun:JSONPath(?en_category,"$.children") AS ?en_children) 
+
+BIND (fun:JSONPath(?en_category,"$.name") AS ?names) 
+BIND (fun:JSONPath(?en_category,"$.country.en") AS ?country) 
+BIND (fun:JSONPath(?en_category,"$.grapevariety.fr") AS ?grape_varety) 
+BIND (fun:JSONPath(?en_category,"$.instanceof.fr") AS ?regional_protection) 
+BIND (fun:JSONPath(?en_category,"$.pnns_group_1.en") AS ?pnns_group_1)
+BIND (fun:JSONPath(?en_category,"$.pnns_group_2.en") AS ?pnns_group_2)
+BIND (fun:JSONPath(?en_category,"$.region.fr") AS ?region)
+BIND (IRI(CONCAT("http://www.wikidata.org/entity/",fun:JSONPath(?en_category,"$.wikidata_category.en"))) as ?wikidata_category) 
+BIND (IRI(CONCAT("http://www.wikidata.org/entity/",fun:JSONPath(?en_category,"$.wikipediacategory.en"))) as ?wikipedia_category) 
+BIND (fun:JSONPath(?en_category,"$.wikidata") AS ?wikidata) 
+}

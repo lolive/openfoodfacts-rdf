@@ -1,0 +1,47 @@
+BASE <http://world-fr.openfoodfacts.org/> 
+PREFIX iter: <http://w3id.org/sparql-generate/iter/> 
+PREFIX fun: <http://w3id.org/sparql-generate/fn/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/> 
+PREFIX food: <http://world-fr.openfoodfacts.org/> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+
+GENERATE { 
+?vitamin a food:Vitamin .
+
+GENERATE { 
+?vitamin rdfs:label ?name_lang
+} 
+ITERATOR iter:JSONListKeys(?names) AS ?lang
+WHERE {
+BIND (fun:JSONPath(?source,CONCAT("$.",?en_vitamin,".name.",?lang)) AS ?name) 
+BIND (STRLANG(?name, ?lang) AS ?name_lang) 
+}.
+
+
+GENERATE { 
+?vitamin food:parent ?parent
+} 
+ITERATOR iter:JSONPath(?en_parents,"$[*]") AS ?en_parent
+WHERE {
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/vitamins/",REPLACE(STR(?en_parent),'"',""))) as ?parent) 
+}.
+
+GENERATE { 
+?vitamin food:child ?child
+} 
+ITERATOR iter:JSONPath(?en_children,"$[*]") AS ?en_child
+WHERE {
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/vitamins/",REPLACE(STR(?en_child),'"',""))) as ?child) 
+}.
+
+}
+SOURCE <https://static.openfoodfacts.org/data/taxonomies/vitamins.json> AS ?source
+ITERATOR iter:JSONListKeys(?source) AS ?en_vitamin
+WHERE {
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/vitamins/",?en_vitamin)) as ?vitamin) 
+BIND (fun:JSONPath(?source,CONCAT("$.",?en_vitamin,".name")) AS ?names) 
+BIND (fun:JSONPath(?source,CONCAT("$.",?en_vitamin,".children")) AS ?en_children) 
+BIND (fun:JSONPath(?source,CONCAT("$.",?en_vitamin,".parents")) AS ?en_parents) 
+} 

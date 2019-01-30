@@ -1,0 +1,70 @@
+BASE <http://world-fr.openfoodfacts.org/> 
+PREFIX iter: <http://w3id.org/sparql-generate/iter/> 
+PREFIX fun: <http://w3id.org/sparql-generate/fn/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX owl: <http://www.w3.org/2002/07/owl#> 
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/> 
+PREFIX food: <http://world-fr.openfoodfacts.org/> 
+PREFIX food_labels: <http://world-fr.openfoodfacts.org/labels/> 
+
+
+GENERATE { 
+
+?label a food:Label ;
+ food:address ?en_address ;
+ food:city ?en_city ;
+ food:country ?en_country ;
+ food:postalcode ?en_postalcode ;
+ food:region ?en_region ;
+ food:website ?en_website ;
+ owl:sameAs ?en_wikidata ;
+.
+
+GENERATE { ?label 
+rdfs:label ?name_lang . }
+ITERATOR iter:JSONListKeys(?names) AS ?lang
+WHERE {
+BIND (fun:JSONPath(?names, CONCAT("$.",?lang)) AS ?name) 
+BIND (STRLANG(?name,?lang) AS ?name_lang)
+} .
+
+
+GENERATE { 
+?label food:parent ?parent
+} 
+ITERATOR iter:JSONPath(?en_parents,"$[*]") AS ?en_parent
+WHERE {
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/labels/",REPLACE(STR(?en_parent),'"',""))) as ?parent) 
+}.
+
+GENERATE { 
+?label food:child ?child
+} 
+ITERATOR iter:JSONPath(?en_children,"$[*]") AS ?en_child
+WHERE {
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/labels/",REPLACE(STR(?en_child),'"',""))) as ?child) 
+}.
+
+
+}
+SOURCE <https://static.openfoodfacts.org/data/taxonomies/labels.full.json> AS ?source 
+ITERATOR iter:JSONListKeys(?source) AS ?en_label_key 
+WHERE { 
+BIND (IRI(CONCAT("http://world-fr.openfoodfacts.org/labels/",?en_label_key)) as ?label) 
+BIND (fun:JSONPath(?source,CONCAT("$.",?en_label_key)) AS ?en_label) 
+
+BIND (fun:JSONPath(?en_label,"$.parents") AS ?en_parents) 
+BIND (fun:JSONPath(?en_label,"$.children") AS ?en_children) 
+
+BIND (fun:JSONPath(?en_label,"$.name") AS ?names) 
+
+BIND (fun:JSONPath(?en_label,"$.address.en") AS ?en_address)
+BIND (fun:JSONPath(?en_label,"$.city.en") AS ?en_city)
+BIND (fun:JSONPath(?en_label,"$.country.en") AS ?en_country)
+BIND (fun:JSONPath(?en_label,"$.postalcode.en") AS ?en_postalcode)
+BIND (fun:JSONPath(?en_label,"$.region.en") AS ?en_region)
+BIND (fun:JSONPath(?en_label,"$.website.en") AS ?en_website)
+BIND (IRI(CONCAT("http://www.wikidata.org/entity/",fun:JSONPath(?en_label,"$.wikidata.en"))) AS ?en_wikidata)
+
+}
