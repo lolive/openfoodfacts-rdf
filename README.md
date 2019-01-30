@@ -1,12 +1,12 @@
 # openfoodfacts-rdf
 Script for an RDF export of OpenFoodFacts.
 
-##Prerequisites
+## Prerequisites
 
 These script were only tested on Linux.
 A valid Java Runtime Environment installation is required.
 
-##Usage
+## Usage
 
 Run
 ````
