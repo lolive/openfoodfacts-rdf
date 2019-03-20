@@ -12,7 +12,7 @@ rm -Rf rdf
 mkdir rdf
 echo "Running... please wait! (3GB, and a lot of patience, are required :)"
 echo
-for i in *sg; do java -jar sparql-generate-jena.jar -q $i > rdf/${i/.sg/.rdf}& done
+for i in *sg; do java -jar sparql-generate-jena.jar -q $i -l OFF > rdf/${i/.sg/.rdf}& done
 wait
 echo "RDF files are now available at directory " $RDFDIR
 cd - > /dev/null
